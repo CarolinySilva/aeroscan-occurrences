@@ -80,6 +80,30 @@ export class MongoOccurrenceRepository implements OccurrenceRepository {
     )
   }
 
+  async findById(
+    id: string,
+  ): Promise<Occurrence | null> {
+    const document = await OccurrenceModel.findById(id).lean()
+
+    if (!document) {
+      return null
+    }
+
+    return Occurrence.create({
+      id: document._id,
+      siteId: document.siteId,
+      droneId: document.droneId,
+      type: document.type,
+      severity: document.severity,
+      detectedAt: document.detectedAt,
+      status: document.status,
+      count: document.count,
+      ...(document.note !== undefined
+        ? { note: document.note }
+        : {}),
+    })
+  }
+
   async create(
     occurrence: Occurrence,
   ): Promise<Occurrence> {

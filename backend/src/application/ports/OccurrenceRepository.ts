@@ -23,6 +23,8 @@ export interface OccurrenceRepository {
     filters: FindAllOccurrencesFilters,
   ): Promise<Occurrence[]>
 
+  findById(id: string): Promise<Occurrence | null>
+
   create(occurrence: Occurrence): Promise<Occurrence>
 
   save(occurrence: Occurrence): Promise<Occurrence>

@@ -69,11 +69,20 @@ class InMemoryOccurrenceRepository
     })
   }
 
+  async findById(
+    id: string,
+  ): Promise<Occurrence | null> {
+    return (
+      this.occurrences.find(
+        (occurrence) => occurrence.id === id,
+      ) ?? null
+    )
+  }
+
   async create(
     occurrence: Occurrence,
   ): Promise<Occurrence> {
     this.occurrences.push(occurrence)
-
     return occurrence
   }
 
@@ -111,9 +120,7 @@ describe('RegisterOccurrence', () => {
     })
 
     expect(repository.occurrences).toHaveLength(1)
-
     expect(result.grouped).toBe(false)
-
     expect(result.occurrence.siteId).toBe('site-1')
     expect(result.occurrence.droneId).toBe('drone-1')
     expect(result.occurrence.type).toBe(
@@ -150,16 +157,12 @@ describe('RegisterOccurrence', () => {
       })
 
     expect(repository.occurrences).toHaveLength(1)
-
     expect(firstResult.grouped).toBe(false)
     expect(secondResult.grouped).toBe(true)
-
     expect(secondResult.occurrence.id).toBe(
       firstResult.occurrence.id,
     )
-
     expect(secondResult.occurrence.count).toBe(2)
-
     expect(secondResult.occurrence.severity).toBe(3)
   })
 
@@ -187,7 +190,6 @@ describe('RegisterOccurrence', () => {
     })
 
     expect(result.grouped).toBe(true)
-
     expect(result.occurrence.severity).toBe(5)
     expect(result.occurrence.count).toBe(2)
   })
@@ -216,7 +218,6 @@ describe('RegisterOccurrence', () => {
     })
 
     expect(result.grouped).toBe(false)
-
     expect(repository.occurrences).toHaveLength(2)
   })
 
@@ -246,7 +247,6 @@ describe('RegisterOccurrence', () => {
     })
 
     expect(result.grouped).toBe(false)
-
     expect(repository.occurrences).toHaveLength(2)
   })
 })

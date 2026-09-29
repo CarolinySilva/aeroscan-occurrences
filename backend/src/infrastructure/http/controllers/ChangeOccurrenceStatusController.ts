@@ -1,13 +1,16 @@
 import { Request, Response } from 'express'
 
 import { ChangeOccurrenceStatus } from '../../../application/use-cases/ChangeOccurrenceStatus'
-import { OccurrenceStatus } from '../../../domain/enums/OccurrenceStatus'
 import { MongoOccurrenceRepository } from '../../repositories/MongoOccurrenceRepository'
+import { changeOccurrenceStatusSchema } from '../schemas/occurrence.schemas'
 
-const occurrenceRepository = new MongoOccurrenceRepository()
+const occurrenceRepository =
+  new MongoOccurrenceRepository()
 
 const changeOccurrenceStatus =
-  new ChangeOccurrenceStatus(occurrenceRepository)
+  new ChangeOccurrenceStatus(
+    occurrenceRepository,
+  )
 
 export class ChangeOccurrenceStatusController {
   async handle(
@@ -16,13 +19,18 @@ export class ChangeOccurrenceStatusController {
   ): Promise<Response> {
     const id = String(request.params.id)
 
-    const { status, note } = request.body
+    const data =
+      changeOccurrenceStatusSchema.parse(
+        request.body,
+      )
 
     const occurrence =
       await changeOccurrenceStatus.execute({
         id,
-        status: status as OccurrenceStatus,
-        ...(note !== undefined ? { note } : {}),
+        status: data.status,
+        ...(data.note !== undefined
+          ? { note: data.note }
+          : {}),
       })
 
     return response.status(200).json({

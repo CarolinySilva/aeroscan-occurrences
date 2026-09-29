@@ -1,27 +1,37 @@
 import { Request, Response } from 'express'
 
+import { FindAllOccurrencesFilters } from '../../../application/ports/OccurrenceRepository'
 import { ListOccurrences } from '../../../application/use-cases/ListOccurrences'
-import { OccurrenceStatus } from '../../../domain/enums/OccurrenceStatus'
 import { MongoOccurrenceRepository } from '../../repositories/MongoOccurrenceRepository'
+import { listOccurrencesQuerySchema } from '../schemas/occurrence.schemas'
 
-const occurrenceRepository = new MongoOccurrenceRepository()
-const listOccurrences = new ListOccurrences(occurrenceRepository)
+const occurrenceRepository =
+  new MongoOccurrenceRepository()
+
+const listOccurrences =
+  new ListOccurrences(occurrenceRepository)
 
 export class ListOccurrencesController {
   async handle(
     request: Request,
     response: Response,
   ): Promise<Response> {
-    const { status, siteId } = request.query
+    const data =
+      listOccurrencesQuerySchema.parse(
+        request.query,
+      )
 
-    const result = await listOccurrences.execute({
-      ...(status
-        ? { status: status as OccurrenceStatus }
+    const filters: FindAllOccurrencesFilters = {
+      ...(data.status !== undefined
+        ? { status: data.status }
         : {}),
-      ...(siteId
-        ? { siteId: String(siteId) }
+      ...(data.siteId !== undefined
+        ? { siteId: data.siteId }
         : {}),
-    })
+    }
+
+    const result =
+      await listOccurrences.execute(filters)
 
     return response.status(200).json(result)
   }

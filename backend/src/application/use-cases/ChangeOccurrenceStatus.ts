@@ -1,7 +1,9 @@
 import { OccurrenceRepository } from '../ports/OccurrenceRepository'
+
 import { Occurrence } from '../../domain/entities/Occurrence'
 import { OccurrenceStatus } from '../../domain/enums/OccurrenceStatus'
 import { DomainError } from '../../domain/errors/DomainError'
+import { OccurrenceNotFoundError } from '../../domain/errors/OccurrenceNotFoundError'
 
 export type ChangeOccurrenceStatusInput = {
   id: string
@@ -21,7 +23,7 @@ export class ChangeOccurrenceStatus {
       await this.occurrenceRepository.findById(input.id)
 
     if (!occurrence) {
-      throw new Error('Occurrence not found')
+      throw new OccurrenceNotFoundError()
     }
 
     switch (input.status) {

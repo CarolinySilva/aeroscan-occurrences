@@ -1,4 +1,5 @@
 import { Occurrence } from '../../domain/entities/Occurrence'
+import { OccurrenceStatus } from '../../domain/enums/OccurrenceStatus'
 import { OccurrenceType } from '../../domain/enums/OccurrenceType'
 
 export type FindOpenRecentParams = {
@@ -8,10 +9,19 @@ export type FindOpenRecentParams = {
   windowInMinutes: number
 }
 
+export type FindAllOccurrencesFilters = {
+  status?: OccurrenceStatus
+  siteId?: string
+}
+
 export interface OccurrenceRepository {
   findOpenRecent(
     params: FindOpenRecentParams,
   ): Promise<Occurrence | null>
+
+  findAll(
+    filters: FindAllOccurrencesFilters,
+  ): Promise<Occurrence[]>
 
   create(occurrence: Occurrence): Promise<Occurrence>
 

@@ -19,6 +19,10 @@ export interface OccurrenceRepository {
     params: FindOpenRecentParams,
   ): Promise<Occurrence | null>
 
+  findAndIncrementOpenRecent(
+    params: FindOpenRecentParams,
+  ): Promise<Occurrence | null>
+
   findAll(
     filters: FindAllOccurrencesFilters,
   ): Promise<Occurrence[]>

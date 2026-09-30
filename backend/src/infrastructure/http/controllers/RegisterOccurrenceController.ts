@@ -37,8 +37,7 @@ export class RegisterOccurrenceController {
           droneId: result.occurrence.droneId,
           type: result.occurrence.type,
           severity: result.occurrence.severity,
-          detectedAt:
-            result.occurrence.detectedAt,
+          detectedAt: result.occurrence.detectedAt,
           status: result.occurrence.status,
           count: result.occurrence.count,
           note: result.occurrence.note,

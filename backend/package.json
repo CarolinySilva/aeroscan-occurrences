@@ -8,7 +8,8 @@
     "build": "tsc",
     "typecheck": "tsc --noEmit",
     "test": "jest",
-    "test:watch": "jest --watch"
+    "test:watch": "jest --watch",
+    "test:integration": "tsx tests/integration/MongoOccurrenceRepository.integration.ts"
   },
   "keywords": [],
   "author": "",

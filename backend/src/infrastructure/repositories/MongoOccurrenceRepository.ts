@@ -8,7 +8,21 @@ import { Occurrence } from '../../domain/entities/Occurrence'
 import { OccurrenceStatus } from '../../domain/enums/OccurrenceStatus'
 import { OccurrenceModel } from '../database/mongoose/OccurrenceModel'
 
-export class MongoOccurrenceRepository implements OccurrenceRepository {
+type OccurrenceDocument = {
+  _id: string
+  siteId: string
+  droneId: string
+  type: Occurrence['type']
+  severity: number
+  detectedAt: Date
+  status: Occurrence['status']
+  count: number
+  note?: string
+}
+
+export class MongoOccurrenceRepository
+  implements OccurrenceRepository
+{
   async findOpenRecent(
     params: FindOpenRecentParams,
   ): Promise<Occurrence | null> {
@@ -33,19 +47,63 @@ export class MongoOccurrenceRepository implements OccurrenceRepository {
       return null
     }
 
-    return Occurrence.create({
-      id: document._id,
-      siteId: document.siteId,
-      droneId: document.droneId,
-      type: document.type,
-      severity: document.severity,
-      detectedAt: document.detectedAt,
-      status: document.status,
-      count: document.count,
-      ...(document.note !== undefined
-        ? { note: document.note }
-        : {}),
-    })
+    return this.toDomain(
+      document as OccurrenceDocument,
+    )
+  }
+
+  async findAndIncrementOpenRecent(
+    params: FindOpenRecentParams,
+  ): Promise<Occurrence | null> {
+    const lowerBound = new Date(
+      params.detectedAt.getTime() -
+        params.windowInMinutes * 60 * 1000,
+    )
+
+    const document =
+      await OccurrenceModel.findOneAndUpdate(
+        {
+          siteId: params.siteId,
+          type: params.type,
+          status: OccurrenceStatus.OPEN,
+          detectedAt: {
+            $gte: lowerBound,
+            $lte: params.detectedAt,
+          },
+        },
+        [
+          {
+            $set: {
+              count: {
+                $add: ['$count', 1],
+              },
+              severity: {
+                $min: [
+                  {
+                    $add: ['$severity', 1],
+                  },
+                  5,
+                ],
+              },
+            },
+          },
+        ],
+        {
+          returnDocument: 'after',
+          sort: {
+            detectedAt: -1,
+          },
+          updatePipeline: true,
+        },
+      ).lean()
+
+    if (!document) {
+      return null
+    }
+
+    return this.toDomain(
+      document as OccurrenceDocument,
+    )
   }
 
   async findAll(
@@ -61,47 +119,29 @@ export class MongoOccurrenceRepository implements OccurrenceRepository {
       query.siteId = filters.siteId
     }
 
-    const documents = await OccurrenceModel.find(query).lean()
+    const documents =
+      await OccurrenceModel.find(query).lean()
 
     return documents.map((document) =>
-      Occurrence.create({
-        id: document._id,
-        siteId: document.siteId,
-        droneId: document.droneId,
-        type: document.type,
-        severity: document.severity,
-        detectedAt: document.detectedAt,
-        status: document.status,
-        count: document.count,
-        ...(document.note !== undefined
-          ? { note: document.note }
-          : {}),
-      }),
+      this.toDomain(
+        document as OccurrenceDocument,
+      ),
     )
   }
 
   async findById(
     id: string,
   ): Promise<Occurrence | null> {
-    const document = await OccurrenceModel.findById(id).lean()
+    const document =
+      await OccurrenceModel.findById(id).lean()
 
     if (!document) {
       return null
     }
 
-    return Occurrence.create({
-      id: document._id,
-      siteId: document.siteId,
-      droneId: document.droneId,
-      type: document.type,
-      severity: document.severity,
-      detectedAt: document.detectedAt,
-      status: document.status,
-      count: document.count,
-      ...(document.note !== undefined
-        ? { note: document.note }
-        : {}),
-    })
+    return this.toDomain(
+      document as OccurrenceDocument,
+    )
   }
 
   async create(
@@ -138,12 +178,32 @@ export class MongoOccurrenceRepository implements OccurrenceRepository {
     }
 
     await OccurrenceModel.updateOne(
-      { _id: occurrence.id },
+      {
+        _id: occurrence.id,
+      },
       {
         $set: update,
       },
     )
 
     return occurrence
+  }
+
+  private toDomain(
+    document: OccurrenceDocument,
+  ): Occurrence {
+    return Occurrence.create({
+      id: document._id,
+      siteId: document.siteId,
+      droneId: document.droneId,
+      type: document.type,
+      severity: document.severity,
+      detectedAt: document.detectedAt,
+      status: document.status,
+      count: document.count,
+      ...(document.note !== undefined
+        ? { note: document.note }
+        : {}),
+    })
   }
 }

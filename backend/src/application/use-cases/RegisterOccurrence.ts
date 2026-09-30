@@ -1,8 +1,9 @@
-import { Occurrence } from '../../domain/entities/Occurrence'
-import { OccurrenceType } from '../../domain/enums/OccurrenceType'
 import { OccurrenceRepository } from '../ports/OccurrenceRepository'
 
-const DEDUPLICATION_WINDOW_MINUTES = 10; 
+import { Occurrence } from '../../domain/entities/Occurrence'
+import { OccurrenceType } from '../../domain/enums/OccurrenceType'
+
+const DEDUPLICATION_WINDOW_IN_MINUTES = 10
 
 export type RegisterOccurrenceInput = {
   siteId: string
@@ -25,30 +26,34 @@ export class RegisterOccurrence {
   async execute(
     input: RegisterOccurrenceInput,
   ): Promise<RegisterOccurrenceOutput> {
-    const existingOccurrence =
-      await this.occurrenceRepository.findOpenRecent({
+    const groupedOccurrence =
+      await this.occurrenceRepository.findAndIncrementOpenRecent({
         siteId: input.siteId,
         type: input.type,
         detectedAt: input.detectedAt,
-        windowInMinutes: DEDUPLICATION_WINDOW_MINUTES,
+        windowInMinutes:
+          DEDUPLICATION_WINDOW_IN_MINUTES,
       })
 
-    if (existingOccurrence) {
-      existingOccurrence.registerRepetition()
-
-      const occurrence =
-        await this.occurrenceRepository.save(existingOccurrence)
-
+    if (groupedOccurrence) {
       return {
-        occurrence,
+        occurrence: groupedOccurrence,
         grouped: true,
       }
     }
 
-    const occurrence = Occurrence.create(input)
+    const occurrence = Occurrence.create({
+      siteId: input.siteId,
+      droneId: input.droneId,
+      type: input.type,
+      severity: input.severity,
+      detectedAt: input.detectedAt,
+    })
 
     const createdOccurrence =
-      await this.occurrenceRepository.create(occurrence)
+      await this.occurrenceRepository.create(
+        occurrence,
+      )
 
     return {
       occurrence: createdOccurrence,

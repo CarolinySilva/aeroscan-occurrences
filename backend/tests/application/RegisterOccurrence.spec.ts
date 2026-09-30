@@ -47,6 +47,21 @@ class InMemoryOccurrenceRepository
     return matches[0] ?? null
   }
 
+  async findAndIncrementOpenRecent(
+    params: FindOpenRecentParams,
+  ): Promise<Occurrence | null> {
+    const occurrence =
+      await this.findOpenRecent(params)
+
+    if (!occurrence) {
+      return null
+    }
+
+    occurrence.registerRepetition()
+
+    return occurrence
+  }
+
   async findAll(
     filters: FindAllOccurrencesFilters,
   ): Promise<Occurrence[]> {

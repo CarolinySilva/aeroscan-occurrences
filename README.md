@@ -39,6 +39,20 @@ aeroscan-occurrences/
 - `frontend-dist/`: frontend compilado em HTML, CSS e JavaScript.
 - `docker-compose.yml`: configuração utilizada para executar o backend e o MongoDB.
 
+### Organização do frontend
+
+O frontend foi organizado em componentes para separar responsabilidades da interface:
+
+- `components/Header.tsx`: cabeçalho e identificação do sistema.
+- `components/SummaryCards.tsx`: resumo das ocorrências.
+- `components/OccurrenceFilters.tsx`: filtros por status e site.
+- `components/OccurrenceList.tsx`: composição da lista de ocorrências.
+- `components/OccurrenceCard.tsx`: apresentação individual de uma ocorrência e suas ações.
+- `components/ResolveOccurrenceModal.tsx`: modal para informar a observação necessária na resolução.
+- `services/occurrences.ts`: comunicação do frontend com a API.
+- `styles/App.css`: estilos da aplicação.
+- `App.tsx`: gerenciamento do estado e orquestração das operações da tela.
+
 ## Como rodar o projeto
 
 ### Pré-requisitos

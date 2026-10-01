@@ -41,12 +41,33 @@ aeroscan-occurrences/
 
 ## Como rodar o projeto
 
+### Pré-requisitos
+
+Para executar o projeto, é necessário ter:
+
+- Docker
+- Docker Compose
+- Node.js 20.19+ ou Node.js 22+
+- Python 3, caso queira servir o frontend compilado localmente
+
 ### Backend com Docker
 
 Na raiz do projeto, execute:
 
 ```bash
-docker compose up --build
+docker compose up -d --build
+```
+
+O comando irá:
+
+- construir a imagem do backend;
+- iniciar o backend;
+- iniciar o MongoDB.
+
+Para verificar os containers:
+
+```bash
+docker compose ps
 ```
 
 A API ficará disponível em:
@@ -55,11 +76,29 @@ A API ficará disponível em:
 http://localhost:3000
 ```
 
-O MongoDB também será iniciado pelo Docker Compose.
+O MongoDB ficará disponível em:
 
-### Backend localmente
+```text
+localhost:27017
+```
 
-É necessário ter Node.js e MongoDB disponíveis.
+Para testar a API:
+
+```bash
+curl http://localhost:3000/occurrences
+```
+
+Para parar os containers:
+
+```bash
+docker compose down
+```
+
+> Não é necessário executar `docker compose down -v`, pois isso também removeria os volumes persistidos do MongoDB.
+
+## Backend localmente
+
+Também é possível executar o backend diretamente com Node.js, desde que exista uma instância do MongoDB disponível.
 
 Entre na pasta do backend:
 
@@ -111,6 +150,12 @@ Por padrão, a aplicação ficará disponível em:
 http://localhost:5173
 ```
 
+O frontend utiliza a API disponível em:
+
+```text
+http://localhost:3000
+```
+
 ## Frontend compilado
 
 A versão compilada do frontend está disponível na pasta:
@@ -119,18 +164,18 @@ A versão compilada do frontend está disponível na pasta:
 frontend-dist/
 ```
 
-Essa pasta contém os arquivos HTML, CSS e JavaScript já gerados, portanto não é necessário executar um novo build.
+Essa pasta contém os arquivos HTML, CSS e JavaScript já gerados pelo Vite, portanto não é necessário executar um novo build para utilizá-la.
 
-Para servir os arquivos compilados localmente, com o backend já rodando, execute na raiz do projeto:
+Com o backend já rodando, execute na raiz do projeto:
 
 ```bash
-python3 -m http.server 5173 -d frontend-dist
+python3 -m http.server 4173 --directory frontend-dist
 ```
 
 Depois acesse:
 
 ```text
-http://localhost:5173
+http://localhost:4173
 ```
 
 O frontend utiliza a API disponível em:
@@ -138,6 +183,24 @@ O frontend utiliza a API disponível em:
 ```text
 http://localhost:3000
 ```
+
+### Gerar novamente o frontend compilado
+
+Caso seja necessário gerar uma nova versão dos arquivos compilados:
+
+```bash
+cd frontend
+npm install
+npm run build
+```
+
+Os arquivos serão gerados em:
+
+```text
+frontend/dist/
+```
+
+Após o build, copie o conteúdo de `frontend/dist/` para `frontend-dist/`.
 
 ## API
 
@@ -243,6 +306,8 @@ Execute:
 npm test
 ```
 
+Os testes automatizados cobrem as principais regras de negócio, casos de uso e endpoints HTTP.
+
 ### Testes de integração com MongoDB
 
 Com o MongoDB disponível, execute:
@@ -251,7 +316,20 @@ Com o MongoDB disponível, execute:
 npm run test:integration
 ```
 
-Os testes cobrem regras de negócio, endpoints HTTP e operações do repositório MongoDB.
+Os testes de integração validam operações reais do repositório MongoDB, incluindo:
+
+- criação e busca de ocorrências;
+- busca de ocorrência aberta recente;
+- filtros por `siteId` e `status`;
+- incremento concorrente do `count`.
+
+### Verificação de tipos
+
+Para verificar o TypeScript:
+
+```bash
+npx tsc --noEmit
+```
 
 ## Como usei IA
 
@@ -283,3 +361,4 @@ Algumas decisões foram tomadas em pontos que não estavam totalmente definidos 
 - O frontend utiliza `http://localhost:3000` como endereço padrão da API.
 - Além do filtro por status solicitado no frontend, também foi disponibilizado filtro por `siteId`, aproveitando o suporte já existente no endpoint de listagem.
 - O campo `count` é exibido na interface para indicar a frequência da ocorrência.
+- O frontend compilado é disponibilizado em `frontend-dist/` para atender à exigência de entrega dos arquivos estáticos.
